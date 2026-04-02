@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - CyberShield</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-dark: #0a0e17;
+            --bg-card: #111827;
+            --bg-input: #1f2937;
+            --border: #374151;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent: #00d4ff;
+            --accent-hover: #00b8e6;
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --info: #3b82f6;
+            --info-bg: rgba(59, 130, 246, 0.1);
+            --critical: #dc2626;
+            --high: #f97316;
+            --medium: #eab308;
+            --low: #22c55e;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--text-primary);
+            background: var(--bg-input);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+        
+        .time-filters {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .time-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .time-btn:hover, .time-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .stat-icon.scans { background: var(--info-bg); color: var(--info); }
+        .stat-icon.vulns { background: var(--danger-bg); color: var(--danger); }
+        .stat-icon.risk { background: var(--warning-bg); color: var(--warning); }
+        .stat-icon.time { background: var(--success-bg); color: var(--success); }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .stat-change {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+        
+        .severity-chart-container {
+            height: 300px;
+        }
+        
+        .vuln-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .vuln-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .vuln-row .label {
+            min-width: 100px;
+            font-size: 0.875rem;
+        }
+        
+        .vuln-bar {
+            flex: 1;
+            height: 24px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .vuln-bar-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 40px;
+        }
+        
+        .vuln-bar-fill.critical { background: var(--critical); }
+        .vuln-bar-fill.high { background: var(--high); }
+        .vuln-bar-fill.medium { background: var(--medium); }
+        .vuln-bar-fill.low { background: var(--low); }
+        
+        .top-targets {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .target-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg-input);
+            border-radius: 8px;
+        }
+        
+        .target-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .target-url {
+            color: var(--accent);
+            font-weight: 500;
+            word-break: break-all;
+        }
+        
+        .target-stats {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .recent-scans {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .recent-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg-input);
+            border-radius: 8px;
+        }
+        
+        .recent-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .recent-target {
+            font-weight: 500;
+        }
+        
+        .recent-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .risk-badge.critical { background: var(--danger-bg); color: var(--danger); }
+        .risk-badge.high { background: rgba(249, 115, 22, 0.1); color: var(--high); }
+        .risk-badge.medium { background: rgba(234, 179, 8, 0.1); color: var(--medium); }
+        .risk-badge.low { background: var(--success-bg); color: var(--low); }
+        .risk-badge.info { background: var(--info-bg); color: var(--info); }
+        
+        .two-col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .charts-grid, .two-col { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-content">
+            <a href="/" class="nav-brand">
+                <i class="fas fa-shield-halved"></i>
+                CyberShield
+            </a>
+            <ul class="nav-links">
+                <li><a href="/"><i class="fas fa-search"></i> Scanner</a></li>
+                <li><a href="/history"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="/analytics" class="active"><i class="fas fa-chart-line"></i> Analytics</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Security Analytics</h1>
+            <div class="time-filters">
+                <button class="time-btn" data-range="24h">24h</button>
+                <button class="time-btn active" data-range="7d">7 Days</button>
+                <button class="time-btn" data-range="30d">30 Days</button>
+                <button class="time-btn" data-range="90d">90 Days</button>
+            </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Total Scans</span>
+                    <div class="stat-icon scans"><i class="fas fa-search"></i></div>
+                </div>
+                <div class="stat-value" id="totalScans">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Vulnerabilities</span>
+                    <div class="stat-icon vulns"><i class="fas fa-bug"></i></div>
+                </div>
+                <div class="stat-value" id="totalVulns">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Avg Risk Score</span>
+                    <div class="stat-icon risk"><i class="fas fa-exclamation-triangle"></i></div>
+                </div>
+                <div class="stat-value" id="avgRisk">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-label">Avg Scan Time</span>
+                    <div class="stat-icon time"><i class="fas fa-clock"></i></div>
+                </div>
+                <div class="stat-value" id="avgTime">-</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Vulnerabilities Over Time</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Severity Distribution</span>
+                </div>
+                <div class="chart-container severity-chart-container">
+                    <canvas id="severityChart"></canvas>
+                </div>
+                <div class="vuln-breakdown" id="vulnBreakdown"></div>
+            </div>
+        </div>
+
+        <div class="two-col">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Top Targeted Hosts</span>
+                </div>
+                <div class="top-targets" id="topTargets">
+                    <div class="empty-state" style="padding: 2rem;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Recent Scans</span>
+                </div>
+                <div class="recent-scans" id="recentScans">
+                    <div class="empty-state" style="padding: 2rem;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="charts-grid" style="margin-top: 1.5rem;">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Vulnerabilities by Type</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Leaks by Type</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="leakChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timelineChart, severityChart, typeChart, leakChart;
+        let currentRange = '7d';
+        
+        const chartColors = {
+            critical: '#dc2626',
+            high: '#f97316',
+            medium: '#eab308',
+            low: '#22c55e',
+            accent: '#00d4ff'
+        };
+        
+        async function loadAnalytics() {
+            try {
+                const [analyticsRes, statsRes] = await Promise.all([
+                    fetch(`/api/analytics?range=${currentRange}`),
+                    fetch('/api/statistics')
+                ]);
+                
+                const analytics = await analyticsRes.json();
+                const stats = await statsRes.json();
+                
+                updateStats(stats.statistics);
+                updateCharts(analytics.analytics);
+                updateTopTargets(analytics.analytics.top_targets);
+                updateRecentScans(stats.recent_activity);
+                
+            } catch (err) {
+                console.error('Failed to load analytics:', err);
+            }
+        }
+        
+        function updateStats(stats) {
+            document.getElementById('totalScans').textContent = stats.total_scans || 0;
+            document.getElementById('totalVulns').textContent = stats.total_vulnerabilities || 0;
+            document.getElementById('avgRisk').textContent = stats.avg_risk_score ? stats.avg_risk_score.toFixed(1) : '0';
+            document.getElementById('avgTime').textContent = stats.avg_duration ? stats.avg_duration.toFixed(1) + 's' : '0s';
+        }
+        
+        function updateCharts(data) {
+            const totals = data.totals;
+            
+            if (timelineChart) timelineChart.destroy();
+            if (severityChart) severityChart.destroy();
+            if (typeChart) typeChart.destroy();
+            if (leakChart) leakChart.destroy();
+            
+            const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+            timelineChart = new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: data.timeline.map(t => t.date),
+                    datasets: [{
+                        label: 'Vulnerabilities',
+                        data: data.timeline.map(t => t.vulns),
+                        borderColor: chartColors.accent,
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Scans',
+                        data: data.timeline.map(t => t.scans * 10),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#9ca3af' } } },
+                    scales: {
+                        x: { ticks: { color: '#6b7280' }, grid: { color: '#374151' } },
+                        y: { ticks: { color: '#6b7280' }, grid: { color: '#374151' } }
+                    }
+                }
+            });
+            
+            const sevCtx = document.getElementById('severityChart').getContext('2d');
+            severityChart = new Chart(sevCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [totals.critical || 0, totals.high || 0, totals.medium || 0, totals.low || 0],
+                        backgroundColor: [chartColors.critical, chartColors.high, chartColors.medium, chartColors.low]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } }
+                }
+            });
+            
+            document.getElementById('vulnBreakdown').innerHTML = [
+                { label: 'Critical', count: totals.critical || 0, cls: 'critical' },
+                { label: 'High', count: totals.high || 0, cls: 'high' },
+                { label: 'Medium', count: totals.medium || 0, cls: 'medium' },
+                { label: 'Low', count: totals.low || 0, cls: 'low' }
+            ].map(item => {
+                const max = Math.max(totals.critical || 0, totals.high || 0, totals.medium || 0, totals.low || 0, 1);
+                const pct = (item.count / max) * 100;
+                return `
+                    <div class="vuln-row">
+                        <span class="label">${item.label}</span>
+                        <div class="vuln-bar">
+                            <div class="vuln-bar-fill ${item.cls}" style="width: ${pct}%">${item.count}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const typeCtx = document.getElementById('typeChart').getContext('2d');
+            typeChart = new Chart(typeCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.vuln_by_type.map(v => v.vuln_type),
+                    datasets: [{
+                        label: 'Count',
+                        data: data.vuln_by_type.map(v => v.count),
+                        backgroundColor: chartColors.accent
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#6b7280' }, grid: { color: '#374151' } },
+                        y: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+                    }
+                }
+            });
+            
+            const leakCtx = document.getElementById('leakChart').getContext('2d');
+            leakChart = new Chart(leakCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.leak_by_type.map(l => l.leak_type),
+                    datasets: [{
+                        label: 'Count',
+                        data: data.leak_by_type.map(l => l.count),
+                        backgroundColor: '#f59e0b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#6b7280' }, grid: { color: '#374151' } },
+                        y: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+        
+        function updateTopTargets(targets) {
+            const container = document.getElementById('topTargets');
+            if (!targets || targets.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No data</p></div>';
+                return;
+            }
+            
+            container.innerHTML = targets.slice(0, 5).map(t => `
+                <div class="target-item">
+                    <div class="target-info">
+                        <span class="target-url">${t.target}</span>
+                        <span class="target-stats">${t.count} scans | Avg risk: ${Number(t.avg_risk).toFixed(1)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateRecentScans(scans) {
+            const container = document.getElementById('recentScans');
+            if (!scans || scans.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No recent scans</p></div>';
+                return;
+            }
+            
+            container.innerHTML = scans.map(s => `
+                <div class="recent-item">
+                    <div class="recent-info">
+                        <span class="recent-target">${s.target}</span>
+                        <span class="recent-time">${formatDate(s.created_at)}</span>
+                    </div>
+                    <span class="risk-badge ${s.risk_level.toLowerCase()}">${s.risk_level}</span>
+                </div>
+            `).join('');
+        }
+        
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentRange = btn.dataset.range;
+                loadAnalytics();
+            });
+        });
+        
+        loadAnalytics();
+    </script>
+</body>
+</html>
